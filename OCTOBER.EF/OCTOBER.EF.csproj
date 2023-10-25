@@ -2,14 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <SupportedPlatform Include="browser" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Telerik.DataSource" Version="2.1.5" />
+    <PackageReference Include="Oracle.EntityFrameworkCore" Version="6.21.120" />
   </ItemGroup>
 </Project>
