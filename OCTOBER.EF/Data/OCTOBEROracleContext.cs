@@ -17,105 +17,312 @@ namespace OCTOBER.EF
         {
         }
 
-        public virtual DbSet<Country> Countries { get; set; } = null!;
-        public virtual DbSet<Department> Departments { get; set; } = null!;
-        public virtual DbSet<Employee> Employees { get; set; } = null!;
-        public virtual DbSet<Employeephone> Employeephones { get; set; } = null!;
-        public virtual DbSet<Employment> Employments { get; set; } = null!;
-        public virtual DbSet<Job> Jobs { get; set; } = null!;
-        public virtual DbSet<Location> Locations { get; set; } = null!;
-        public virtual DbSet<Region> Regions { get; set; } = null!;
-        public virtual DbSet<Salary> Salaries { get; set; } = null!;
+        public virtual DbSet<Course> Courses { get; set; } = null!;
+        public virtual DbSet<Enrollment> Enrollments { get; set; } = null!;
+        public virtual DbSet<Grade> Grades { get; set; } = null!;
+        public virtual DbSet<GradeConversion> GradeConversions { get; set; } = null!;
+        public virtual DbSet<GradeType> GradeTypes { get; set; } = null!;
+        public virtual DbSet<GradeTypeWeight> GradeTypeWeights { get; set; } = null!;
+        public virtual DbSet<Instructor> Instructors { get; set; } = null!;
+        public virtual DbSet<School> Schools { get; set; } = null!;
+        public virtual DbSet<Section> Sections { get; set; } = null!;
+        public virtual DbSet<Student> Students { get; set; } = null!;
+        public virtual DbSet<Zipcode> Zipcodes { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("UD_APARNAR")
                 .UseCollation("USING_NLS_COMP");
 
-            modelBuilder.Entity<Country>(entity =>
+            modelBuilder.Entity<Course>(entity =>
             {
-                entity.Property(e => e.CountryId).IsFixedLength();
+                entity.HasKey(e => new { e.CourseNo, e.SchoolId })
+                    .HasName("COURSE_PK");
 
-                entity.HasOne(d => d.Region)
-                    .WithMany(p => p.Countries)
-                    .HasForeignKey(d => d.RegionId)
-                    .HasConstraintName("COUNTR_REG_FK");
-            });
+                entity.Property(e => e.CourseNo).ValueGeneratedOnAdd();
 
-            modelBuilder.Entity<Department>(entity =>
-            {
-                entity.HasOne(d => d.Location)
-                    .WithMany(p => p.Departments)
-                    .HasForeignKey(d => d.LocationId)
-                    .HasConstraintName("DEPT_LOC_FK");
+                entity.Property(e => e.CreatedBy).ValueGeneratedOnAdd();
 
-                entity.HasOne(d => d.Manager)
-                    .WithMany(p => p.Departments)
-                    .HasForeignKey(d => d.ManagerId)
-                    .HasConstraintName("DEPT_MGR_FK");
-            });
+                entity.Property(e => e.CreatedDate).ValueGeneratedOnAdd();
 
-            modelBuilder.Entity<Employee>(entity =>
-            {
-                entity.Property(e => e.EmployeeId).ValueGeneratedNever();
-            });
+                entity.Property(e => e.ModifiedBy).ValueGeneratedOnAdd();
 
-            modelBuilder.Entity<Employeephone>(entity =>
-            {
-                entity.Property(e => e.EmployeePhoneId).ValueGeneratedNever();
+                entity.Property(e => e.ModifiedDate).ValueGeneratedOnAdd();
 
-                entity.HasOne(d => d.Employee)
-                    .WithMany(p => p.Employeephones)
-                    .HasForeignKey(d => d.EmployeeId)
-                    .HasConstraintName("PHONE_EMP_ID_FK");
-            });
-
-            modelBuilder.Entity<Employment>(entity =>
-            {
-                entity.HasKey(e => new { e.EmployeeId, e.StartDate })
-                    .HasName("JHIST_EMP_ID_ST_DATE_PK");
-
-                entity.HasOne(d => d.Department)
-                    .WithMany(p => p.Employments)
-                    .HasForeignKey(d => d.DepartmentId)
-                    .HasConstraintName("JHIST_DEPT_FK");
-
-                entity.HasOne(d => d.Employee)
-                    .WithMany(p => p.Employments)
-                    .HasForeignKey(d => d.EmployeeId)
+                entity.HasOne(d => d.School)
+                    .WithMany(p => p.Courses)
+                    .HasForeignKey(d => d.SchoolId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("JHIST_EMP_FK");
+                    .HasConstraintName("COURSE_FK2");
 
-                entity.HasOne(d => d.Job)
-                    .WithMany(p => p.Employments)
-                    .HasForeignKey(d => d.JobId)
+                entity.HasOne(d => d.PrerequisiteNavigation)
+                    .WithMany(p => p.InversePrerequisiteNavigation)
+                    .HasForeignKey(d => new { d.Prerequisite, d.PrerequisiteSchoolId })
+                    .HasConstraintName("COURSE_FK1");
+            });
+
+            modelBuilder.Entity<Enrollment>(entity =>
+            {
+                entity.HasKey(e => new { e.SectionId, e.StudentId, e.SchoolId })
+                    .HasName("ENROLLMENT_PK");
+
+                entity.Property(e => e.CreatedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedDate).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedDate).ValueGeneratedOnAdd();
+
+                entity.HasOne(d => d.School)
+                    .WithMany(p => p.Enrollments)
+                    .HasForeignKey(d => d.SchoolId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("JHIST_JOB_FK");
+                    .HasConstraintName("ENROLLMENT_FK3");
+
+                entity.HasOne(d => d.S)
+                    .WithMany(p => p.Enrollments)
+                    .HasForeignKey(d => new { d.SectionId, d.SchoolId })
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("ENROLLMENT_FK1");
+
+                entity.HasOne(d => d.SNavigation)
+                    .WithMany(p => p.Enrollments)
+                    .HasForeignKey(d => new { d.StudentId, d.SchoolId })
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("ENROLLMENT_FK2");
             });
 
-            modelBuilder.Entity<Location>(entity =>
+            modelBuilder.Entity<Grade>(entity =>
             {
-                entity.Property(e => e.CountryId).IsFixedLength();
+                entity.HasKey(e => new { e.SchoolId, e.StudentId, e.SectionId, e.GradeTypeCode, e.GradeCodeOccurrence })
+                    .HasName("GRADE_PK");
 
-                entity.HasOne(d => d.Country)
-                    .WithMany(p => p.Locations)
-                    .HasForeignKey(d => d.CountryId)
-                    .HasConstraintName("LOC_C_ID_FK");
+                entity.Property(e => e.GradeTypeCode).IsFixedLength();
+
+                entity.Property(e => e.CreatedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedDate).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedDate).ValueGeneratedOnAdd();
+
+                entity.HasOne(d => d.School)
+                    .WithMany(p => p.Grades)
+                    .HasForeignKey(d => d.SchoolId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("GRADE_FK1");
+
+                entity.HasOne(d => d.GradeTypeWeight)
+                    .WithMany(p => p.Grades)
+                    .HasForeignKey(d => new { d.SchoolId, d.SectionId, d.GradeTypeCode })
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("GRADE_FK3");
+
+                entity.HasOne(d => d.S)
+                    .WithMany(p => p.Grades)
+                    .HasForeignKey(d => new { d.SectionId, d.StudentId, d.SchoolId })
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("GRADE_FK2");
             });
 
-            modelBuilder.Entity<Salary>(entity =>
+            modelBuilder.Entity<GradeConversion>(entity =>
             {
-                entity.Property(e => e.SalaryId).ValueGeneratedNever();
+                entity.HasKey(e => new { e.SchoolId, e.LetterGrade })
+                    .HasName("GRADE_CONVERSION_PK");
 
-                entity.HasOne(d => d.Employment)
-                    .WithMany(p => p.Salaries)
-                    .HasForeignKey(d => new { d.EmployeeId, d.StartDate })
-                    .HasConstraintName("SALARY_EMP_FK");
+                entity.Property(e => e.CreatedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedDate).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedDate).ValueGeneratedOnAdd();
+
+                entity.HasOne(d => d.School)
+                    .WithMany(p => p.GradeConversions)
+                    .HasForeignKey(d => d.SchoolId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("GRADE_CONVERSION_FK1");
             });
 
-            modelBuilder.HasSequence("EMPLOYEEPHONE_SEQ");
+            modelBuilder.Entity<GradeType>(entity =>
+            {
+                entity.HasKey(e => new { e.SchoolId, e.GradeTypeCode })
+                    .HasName("GRADE_TYPE_PK");
 
-            modelBuilder.HasSequence("SALARY_SEQ");
+                entity.Property(e => e.GradeTypeCode).IsFixedLength();
+
+                entity.Property(e => e.CreatedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedDate).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedDate).ValueGeneratedOnAdd();
+
+                entity.HasOne(d => d.School)
+                    .WithMany(p => p.GradeTypes)
+                    .HasForeignKey(d => d.SchoolId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("GRADE_TYPE_FK1");
+            });
+
+            modelBuilder.Entity<GradeTypeWeight>(entity =>
+            {
+                entity.HasKey(e => new { e.SchoolId, e.SectionId, e.GradeTypeCode })
+                    .HasName("GRADE_TYPE_WEIGHT_PK");
+
+                entity.Property(e => e.GradeTypeCode).IsFixedLength();
+
+                entity.Property(e => e.CreatedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedDate).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedDate).ValueGeneratedOnAdd();
+
+                entity.HasOne(d => d.School)
+                    .WithMany(p => p.GradeTypeWeights)
+                    .HasForeignKey(d => d.SchoolId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("GRADE_TYPE_WEIGHT_FK1");
+
+                entity.HasOne(d => d.GradeType)
+                    .WithMany(p => p.GradeTypeWeights)
+                    .HasForeignKey(d => new { d.SchoolId, d.GradeTypeCode })
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("GRADE_TYPE_WEIGHT_FK2");
+
+                entity.HasOne(d => d.S)
+                    .WithMany(p => p.GradeTypeWeights)
+                    .HasForeignKey(d => new { d.SectionId, d.SchoolId })
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("GRADE_TYPE_WEIGHT_FK3");
+            });
+
+            modelBuilder.Entity<Instructor>(entity =>
+            {
+                entity.HasKey(e => new { e.SchoolId, e.InstructorId })
+                    .HasName("INSTRUCTOR_PK");
+
+                entity.Property(e => e.InstructorId).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedDate).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedDate).ValueGeneratedOnAdd();
+
+                entity.HasOne(d => d.School)
+                    .WithMany(p => p.Instructors)
+                    .HasForeignKey(d => d.SchoolId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("INSTRUCTOR_FK1");
+
+                entity.HasOne(d => d.ZipNavigation)
+                    .WithMany(p => p.Instructors)
+                    .HasForeignKey(d => d.Zip)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("INSTRUCTOR_FK2");
+            });
+
+            modelBuilder.Entity<School>(entity =>
+            {
+                entity.Property(e => e.SchoolId).ValueGeneratedNever();
+
+                entity.Property(e => e.CreatedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedDate).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedDate).ValueGeneratedOnAdd();
+            });
+
+            modelBuilder.Entity<Section>(entity =>
+            {
+                entity.HasKey(e => new { e.SectionId, e.SchoolId })
+                    .HasName("SECTION_PK");
+
+                entity.Property(e => e.SectionId).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedDate).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedDate).ValueGeneratedOnAdd();
+
+                entity.HasOne(d => d.School)
+                    .WithMany(p => p.Sections)
+                    .HasForeignKey(d => d.SchoolId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("SECTION_FK2");
+
+                entity.HasOne(d => d.Course)
+                    .WithMany(p => p.Sections)
+                    .HasForeignKey(d => new { d.CourseNo, d.SchoolId })
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("SECTION_FK1");
+
+                entity.HasOne(d => d.Instructor)
+                    .WithMany(p => p.Sections)
+                    .HasForeignKey(d => new { d.SchoolId, d.InstructorId })
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("SECTION_FK3");
+            });
+
+            modelBuilder.Entity<Student>(entity =>
+            {
+                entity.HasKey(e => new { e.StudentId, e.SchoolId })
+                    .HasName("STUDENT_PK");
+
+                entity.Property(e => e.StudentId).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedDate).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedDate).ValueGeneratedOnAdd();
+
+                entity.HasOne(d => d.School)
+                    .WithMany(p => p.Students)
+                    .HasForeignKey(d => d.SchoolId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("STUDENT_FK1");
+            });
+
+            modelBuilder.Entity<Zipcode>(entity =>
+            {
+                entity.HasKey(e => e.Zip)
+                    .HasName("ZIP_PK");
+
+                entity.Property(e => e.CreatedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.CreatedDate).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedBy).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.ModifiedDate).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.State).IsFixedLength();
+            });
+
+            modelBuilder.HasSequence("COURSE_SEQ");
+
+            modelBuilder.HasSequence("INSTRUCTOR_SEQ");
+
+            modelBuilder.HasSequence("SECTION_SEQ");
+
+            modelBuilder.HasSequence("STUDENT_SEQ");
 
             OnModelCreatingPartial(modelBuilder);
         }

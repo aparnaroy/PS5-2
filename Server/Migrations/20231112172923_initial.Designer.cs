@@ -12,7 +12,7 @@ using Oracle.EntityFrameworkCore.Metadata;
 namespace OCTOBER.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231025203713_initial")]
+    [Migration("20231112172923_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
